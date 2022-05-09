@@ -3,7 +3,7 @@ from .models import Measurement
 from .forms import MeasurementModelForm
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
-from .utils import get_geo, get_center_coordinates
+from .utils import get_geo, get_center_coordinates, get_zoom
 import folium
 
 
@@ -23,7 +23,7 @@ def calculate_distance_view(request):
     pointA = (l_lat, l_lon)
 
     # Изначальная отрисовка карты
-    m = folium.Map(width=800, height=500, location=get_center_coordinates(l_lat, l_lon))
+    m = folium.Map(width=800, height=500, location=get_center_coordinates(l_lat, l_lon), zoom_start=8)
 
     # маркер местоположения
     folium.Marker([l_lat, l_lon], tooltip='click here for more', popup=city['city'],
@@ -45,7 +45,8 @@ def calculate_distance_view(request):
 
         # Модификация отрисовки карты
         m = folium.Map(width=800, height=500,
-                       location=get_center_coordinates(l_lat, l_lon, d_lat, d_lon))
+                       location=get_center_coordinates(l_lat, l_lon, d_lat, d_lon),
+                       zoom_start=get_zoom(distance))
 
         # маркер местоположения
         folium.Marker([l_lat, l_lon], tooltip='click here for more', popup=city['city'],
@@ -53,6 +54,12 @@ def calculate_distance_view(request):
         # маркер точки назначения
         folium.Marker([d_lat, d_lon], tooltip='click here for more', popup=destination,
                       icon=folium.Icon(color='red', icon='cloud')).add_to(m)
+
+
+        # отрисовка линии между двумя местоположением и точкой назначения
+        line = folium.PolyLine(locations=[pointA, pointB], weight=2, color='blue')
+        m.add_child(line)
+
 
         instance.location = location
         instance.distance = distance
